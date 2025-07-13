@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dino Runner Game</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #f4f4f4;
+      font-family: sans-serif;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+      background: white;
+      border: 2px solid #333;
+    }
+  </style>
+</head>
+<body>
+<canvas id="game" width="800" height="300"></canvas>
+
+<script>
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
+
+  let player = { x: 50, y: 200, w: 50, h: 50, vy: 0, jump: -12, gravity: 0.7, grounded: true };
+  let obstacles = [];
+  let score = 0;
+  let gameOver = false;
+
+  function spawnObstacle() {
+    const height = Math.random() * 40 + 20;
+    obstacles.push({ x: 800, y: 250 - height, w: 20, h: height });
+  }
+
+  function drawPlayer() {
+    ctx.fillStyle = "#000";
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+  }
+
+  function drawObstacles() {
+    ctx.fillStyle = "tomato";
+    for (let o of obstacles) {
+      ctx.fillRect(o.x, o.y, o.w, o.h);
+    }
+  }
+
+  function drawScore() {
+    ctx.fillStyle = "#333";
+    ctx.font = "20px Arial";
+    ctx.fillText("Score: " + score, 10, 25);
+  }
+
+  function update() {
+    if (gameOver) return;
+
+    // Player physics
+    player.vy += player.gravity;
+    player.y += player.vy;
+
+    if (player.y >= 250) {
+      player.y = 250;
+      player.vy = 0;
+      player.grounded = true;
+    }
+
+    // Obstacles
+    for (let o of obstacles) {
+      o.x -= 6;
+      if (
+        player.x < o.x + o.w &&
+        player.x + player.w > o.x &&
+        player.y < o.y + o.h &&
+        player.y + player.h > o.y
+      ) {
+        gameOver = true;
+        alert("Game Over! Your score: " + score);
+        location.reload();
+      }
+    }
+
+    // Remove off-screen obstacles
+    obstacles = obstacles.filter(o => o.x + o.w > 0);
+
+    // Scoring
+    score++;
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawPlayer();
+    drawObstacles();
+    drawScore();
+  }
+
+  function gameLoop() {
+    update();
+    render();
+    if (!gameOver) requestAnimationFrame(gameLoop);
+  }
+
+  setInterval(spawnObstacle, 1500);
+  gameLoop();
+
+  document.addEventListener("keydown", e => {
+    if (e.code === "Space" && player.grounded) {
+      player.vy = player.jump;
+      player.grounded = false;
+    }
+  });
+</script>
+</body>
+</html>
